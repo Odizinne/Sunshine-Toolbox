@@ -18,10 +18,15 @@ class SunshineToolbox:
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
 
-    def write_status_file(self, status):
+    def create_status_file(self):
         file_path = os.path.join(self.directory, 'status.txt')
         with open(file_path, 'w') as file:
-            file.write(str(status))
+            pass
+
+    def delete_status_file(self):
+        file_path = os.path.join(self.directory, 'status.txt')
+        if os.path.exists(file_path):
+            os.remove(file_path)
 
     def big_picture_dummy(self):
         self.search_window()
@@ -62,7 +67,8 @@ class SunshineToolbox:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--stream-status', choices=['true', 'false'], help='Write stream status to appdata/roaming/sunshine-status/status.txt.')    
+    parser.add_argument('--stream-on', action='store_true', help='Create a status file in appdata/roaming/sunshine-status/status.txt.')
+    parser.add_argument('--stream-off', action='store_true', help='Delete the status file in appdata/roaming/sunshine-status/status.txt.')
     parser.add_argument('--bigpicture-dummy', action='store_true', help='Run and wait for steam big picture to open and close')
     parser.add_argument("--set-resolution", nargs=3, metavar=('WIDTH', 'HEIGHT', 'REFRESH_RATE'), help="Change display resolution and refresh rate.")
     parser.add_argument('--close-bigpicture', action='store_true', help='Close Steam Big Picture window if found.')
@@ -76,11 +82,11 @@ def main():
         print("No arguments provided. Use --help or -h to view commands.")
         sys.exit()
         
-    if args.stream_status == 'false':
-        toolbox.write_status_file(False)
+    if args.stream_off:
+        toolbox.delete_status_file()
         sys.exit()
-    elif args.stream_status == 'true':
-        toolbox.write_status_file(True)
+    elif args.stream_on:
+        toolbox.create_status_file()
         sys.exit()
     elif args.bigpicture_dummy:
         toolbox.big_picture_dummy()
