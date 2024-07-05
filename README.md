@@ -1,6 +1,7 @@
 # Sunshine-Toolbox
 
 Usefull commands for sunshine automatisation.
+
 ## Download
 
 You can find an exe in the release section.<br/>
@@ -16,9 +17,9 @@ Not required if you're using the provided .exe
 
 ## Usage
 
-### `--stream-status`: [true / false]
+### `--stream-on / --stream-off`
 
-This will write True or False into a file (`%APPDATA%\sunshine-status\status.txt`).<br/>
+This will create or delete a file (`%APPDATA%\sunshine-status\status.txt`).<br/>
 I'm using this to know if a stream is running or not in another project.
 
 ### `--set-resolution`: WIDTH HEIGHT REFRESH_RATE
