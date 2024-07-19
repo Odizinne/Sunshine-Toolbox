@@ -1,24 +1,25 @@
+import os
 from cx_Freeze import setup, Executable
-import sys
 
+src_dir = os.path.dirname(os.path.abspath(__file__))
 build_dir = "build/sunshine-toolbox"
 base = None
-
-if sys.platform == "win32":
-    base = "Win32GUI"
-
 
 build_exe_options = {
     "build_exe": build_dir,
 }
 
 executables = [
-    Executable("sunshine-toolbox.py", base=base)
+    Executable(
+        script = os.path.join(src_dir, 'sunshine-toolbox.py'), 
+        base = "Win32GUI",
+        target_name = "sunshine-toolbox"
+    )
 ]
 
 setup(
     name="sunshine-toolbox",
-    version="0.1",
+    version="1.0",
     options={"build_exe": build_exe_options},
     executables=executables
 )
