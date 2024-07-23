@@ -26,7 +26,7 @@ I'm using this to know if a stream is running or not in another project.
 Self explaining.
 
 Usefull for setting client resolution as do command:<br/>
-`cmd /c "C:\path\to\sunshine-toolbox.exe" %SUNSHINE_CLIENT_WIDTH% %SUNSHINE_CLIENT_HEIGHT% %SUNSHINE_CLIENT_FPS%`
+`cmd /c "C:\path\to\sunshine-toolbox.exe" --set-resolution %SUNSHINE_CLIENT_WIDTH% %SUNSHINE_CLIENT_HEIGHT% %SUNSHINE_CLIENT_FPS%`
 
 And to reset to default resolution as undo command:<br/>
 `cmd /c "C:\path\to\sunshine-toolbox.exe" 2560 1440 144`

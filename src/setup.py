@@ -3,7 +3,6 @@ from cx_Freeze import setup, Executable
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
 build_dir = "build/sunshine-toolbox"
-base = None
 
 build_exe_options = {
     "build_exe": build_dir,
