@@ -9,16 +9,7 @@ build_exe_options = {
 }
 
 executables = [
-    Executable(
-        script = os.path.join(src_dir, 'sunshine-toolbox.py'), 
-        base = "Win32GUI",
-        target_name = "sunshine-toolbox"
-    )
+    Executable(script=os.path.join(src_dir, "sunshine-toolbox.py"), base="Win32GUI", target_name="sunshine-toolbox")
 ]
 
-setup(
-    name="sunshine-toolbox",
-    version="1.0",
-    options={"build_exe": build_exe_options},
-    executables=executables
-)
+setup(name="sunshine-toolbox", version="1.0", options={"build_exe": build_exe_options}, executables=executables)

@@ -6,9 +6,11 @@ import sys
 import win32api
 import win32con
 import pywintypes
+from steam_language_reader import get_big_picture_window_title
+
 
 class SunshineToolbox:
-    BIG_PICTURE_KEYWORDS = ['Steam', 'mode', 'Big', 'Picture']
+    BIG_PICTURE_KEYWORDS = get_big_picture_window_title().lower().split()
 
     def __init__(self, directory):
         self.directory = directory
@@ -19,12 +21,12 @@ class SunshineToolbox:
             os.makedirs(self.directory)
 
     def create_status_file(self):
-        file_path = os.path.join(self.directory, 'status.txt')
-        with open(file_path, 'w') as file:
+        file_path = os.path.join(self.directory, "status.txt")
+        with open(file_path, "w") as file:
             pass
 
     def delete_status_file(self):
-        file_path = os.path.join(self.directory, 'status.txt')
+        file_path = os.path.join(self.directory, "status.txt")
         if os.path.exists(file_path):
             os.remove(file_path)
 
@@ -39,11 +41,13 @@ class SunshineToolbox:
                 target_window = gw.getWindowsWithTitle(window_title)[0]
                 print(f"Closed window: {target_window.title}")
                 target_window.close()
-            
+
     def search_window(self, find_window=True):
         while True:
-            window_found = any(all(word.lower() in window_title.lower() for word in self.BIG_PICTURE_KEYWORDS) 
-                               for window_title in gw.getAllTitles())
+            window_found = any(
+                all(word.lower() in window_title.lower() for word in self.BIG_PICTURE_KEYWORDS)
+                for window_title in gw.getAllTitles()
+            )
             if window_found == find_window:
                 break
             time.sleep(1)
@@ -64,23 +68,33 @@ class SunshineToolbox:
         else:
             print("Display settings changed successfully.")
 
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--stream-on', action='store_true', help='Create a status.txt in %APPDATA%/sunshine-status/')
-    parser.add_argument('--stream-off', action='store_true', help='Delete the status file')
-    parser.add_argument('--bigpicture-dummy', action='store_true', help='Dummy load to allow exiting stream session by closing big picture')
-    parser.add_argument("--set-resolution", nargs=3, metavar=('WIDTH', 'HEIGHT', 'REFRESH_RATE'), help="Change display resolution and refresh rate.")
-    parser.add_argument('--close-bigpicture', action='store_true', help='Close Steam Big Picture window')
+    parser.add_argument("--stream-on", action="store_true", help="Create status.txt in %APPDATA%/sunshine-status/")
+    parser.add_argument("--stream-off", action="store_true", help="Delete status.txt in %APPDATA%/sunshine-status/")
+    parser.add_argument(
+        "--bigpicture-dummy",
+        action="store_true",
+        help="Dummy load to allow exiting stream session by closing big picture",
+    )
+    parser.add_argument(
+        "--set-resolution",
+        nargs=3,
+        metavar=("WIDTH", "HEIGHT", "REFRESH_RATE"),
+        help="Change display resolution and refresh rate.",
+    )
+    parser.add_argument("--close-bigpicture", action="store_true", help="Close Steam Big Picture window")
 
     args = parser.parse_args()
 
-    directory = os.path.join(os.getenv('APPDATA'), 'sunshine-status')
+    directory = os.path.join(os.getenv("APPDATA"), "sunshine-status")
     toolbox = SunshineToolbox(directory)
 
     if not any(vars(args).values()):
         print("No arguments provided. Use --help or -h to view commands.")
         sys.exit()
-        
+
     if args.stream_off:
         toolbox.delete_status_file()
         sys.exit()
@@ -102,5 +116,7 @@ def main():
     elif args.close_bigpicture:
         toolbox.close_big_picture()
         sys.exit()
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     main()
