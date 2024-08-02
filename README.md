@@ -1,4 +1,6 @@
 # Sunshine-Toolbox
+[![Github All Releases](https://img.shields.io/github/downloads/odizinne/Sunshine-Toolbox/total.svg)]()
+[![license](https://img.shields.io/github/license/odizinne/Sunshine-Toolbox)]()
 
 Useful commands for sunshine automation.
 
