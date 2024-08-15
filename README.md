@@ -31,7 +31,7 @@ Be sure your monitor has support for your client resolution. If not, you can add
 This will just close Steam Big Picture if the window exist.  
 Useful to add as undo command for Steam Big Picture app.
 
-- `--bigpicture-dummy`
+- `--bigpicture-dummyload`
 
 This is meant to be used as main command for Steam Big Picture app.  
 This script will end when big picture window is closed.  
