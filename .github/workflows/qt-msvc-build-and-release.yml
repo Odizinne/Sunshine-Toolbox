@@ -93,6 +93,18 @@ jobs:
               exit 1
           }
 
+      - name: Rename release folder
+        shell: pwsh
+        run: |
+          $releaseDir = "build/release"
+          $newDir = "Sunshine-Toolbox"
+          if (Test-Path $releaseDir) {
+              Rename-Item -Path $releaseDir -NewName $newDir
+          } else {
+              Write-Error "Release folder not found!"
+              exit 1
+          }
+          
       - name: Zip binaries folder
         run: |
           $zipFile = "build/Sunshine-Toolbox_msvc_64.zip"
