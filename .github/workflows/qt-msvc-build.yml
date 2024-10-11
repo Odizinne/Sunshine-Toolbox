@@ -110,7 +110,7 @@ jobs:
       - name: Zip binaries folder
         run: |
           $zipFile = "build/Sunshine-Toolbox_msvc_64.zip"
-          $folder = "build/release"
+          $folder = "build/Sunshine-Toolbox"
           Compress-Archive -Path $folder -DestinationPath $zipFile
         shell: pwsh
           
