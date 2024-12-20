@@ -161,18 +161,19 @@ void bigPictureDummyLoad() {
 }
 
 void printHelp() {
-    cout << "Usage: [program_name] [OPTIONS]" << endl;
+    cout << "Usage: [sunshine-toolbox.exe] [OPTIONS]" << endl;
     cout << "Options:" << endl;
     cout << "  -h, --help                  Show this help message and exit" << endl;
     cout << "  --set-resolution width height refreshRate" << endl;
     cout << "                              Set the primary display resolution to the specified width, height, and refresh rate." << endl;
-    cout << "  --stream-on                 Set the streaming status to ON by creating a status file (%appdata%\\sunshine-status\\status.txt)." << endl;
-    cout << "  --stream-off                Set the streaming status to OFF by deleting the status file (%appdata%\\sunshine-status\\status.txt)." << endl;
+    cout << "  --stream-on                 Scripting purpose: create a status file (%appdata%\\sunshine-status\\status.txt)." << endl;
+    cout << "  --stream-off                Scripting purpose: delete the status file (%appdata%\\sunshine-status\\status.txt)." << endl;
     cout << "  --close-bigpicture          Close Steam Big Picture window if it's open." << endl;
     cout << "  --bigpicture-dummyload      Start steam in BigPicture mode and wait until it is closed, then exit the application." << endl;
 }
 
 int main(int argc, char *argv[]) {
+    cout << "Sunshine-toolbox by github.com/odizinne" << endl;
     if (argc < 2) {
         printHelp();
         return 1;
