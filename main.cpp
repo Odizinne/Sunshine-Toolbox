@@ -1,4 +1,3 @@
-#include <QCoreApplication>
 #include <iostream>
 #include <windows.h>
 #include <cstdlib>
@@ -6,8 +5,6 @@
 #include <fstream>
 #include <ShlObj.h>
 #include <winuser.h>
-#include <QString>
-#include <QDir>
 #include "steamwindowmanager.h"
 #include <chrono>
 #include <thread>
@@ -19,7 +16,6 @@ using namespace std;
 wstring getStatusFilePath() {
     wchar_t path[MAX_PATH];
     if (SHGetFolderPathW(NULL, CSIDL_APPDATA, NULL, 0, path) == S_OK) {
-        qDebug() << wstring(path);
         return wstring(path) + L"\\sunshine-status\\status.txt";
     } else {
         wcerr << L"Failed to retrieve %APPDATA% path." << endl;
@@ -133,10 +129,10 @@ void bigPictureDummyLoad() {
         return;
     }
 
-    auto waitInterval = milliseconds(500);  // Time to wait between checks
-    auto timeout = seconds(30);  // Maximum time to wait for the window to appear
+    std::chrono::milliseconds waitInterval(500);  // Time to wait between checks
+    std::chrono::seconds timeout(30);  // Maximum time to wait for the window to appear
 
-    auto start = steady_clock::now();
+    std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
     bool found = false;
 
     // Check for the Big Picture window within the timeout period
@@ -229,15 +225,9 @@ int main(int argc, char *argv[]) {
     } else if (option == "--bigpicture-dummyload") {
         bigPictureDummyLoad();
     } else if (option == "--enable-hdr") {
-        hdr::Status capability = hdr::GetWindowsHDRStatus();
-        if (capability != hdr::Status::Unsupported) {
-            hdr::SetWindowsHDRStatus(true);
-        }
+        toggleHDR(true);
     } else if (option == "--disable-hdr") {
-        hdr::Status capability = hdr::GetWindowsHDRStatus();
-        if (capability != hdr::Status::Unsupported) {
-            hdr::SetWindowsHDRStatus(false);
-        }
+        toggleHDR(false);
     } else {
         cerr << "Invalid option. Use -h or --help for usage information." << endl;
         return 1;

@@ -1,56 +1,57 @@
 #include "steamwindowmanager.h"
-#include <QMap>
-#include <QStringList>
-#include <QVector>
-#include <windows.h>
-#include <winreg.h>
+#include <algorithm>
 #include <iostream>
+#include <map>
+#include <sstream>
+#include <codecvt>
+#include <locale>
+#include <Windows.h>
+#include <vector>
+#include <winreg.h>
 
 // Define the map
-const QMap<QString, QString> BIG_PICTURE_WINDOW_TITLES
-    = {{"schinese", "Steam 大屏幕模式"},
-       {"tchinese", "Steam Big Picture 模式"},
-       {"japanese", "Steam Big Pictureモード"},
-       {"koreana", "Steam Big Picture 모드"},
-       {"thai", "โหมด Big Picture บน Steam"},
-       {"bulgarian", "Steam режим „Голям екран“"},
-       {"czech", "Steam režim Big Picture"},
-       {"danish", "Steam Big Picture-tilstand"},
-       {"german", "Big-Picture-Modus"},
-       {"english", "Steam Big Picture mode"},
-       {"spanish", "Modo Big Picture de Steam"},
-       {"latam", "Modo Big Picture de Steam"},
-       {"greek", "Steam Λειτουργία Big Picture"},
-       {"french", "Steam mode Big Picture"},
-       {"indonesian", "Mode Big Picture Steam"},
-       {"italian", "Modalità Big Picture di Steam"},
-       {"hungarian", "Steam Nagy Kép mód"},
-       {"dutch", "Steam Big Picture-modus"},
-       {"norwegian", "Steam Big Picture-modus"},
-       {"polish", "Tryb Big Picture Steam"},
-       {"portuguese", "Steam Big Picture"},
-       {"brazilian", "Steam Modo Big Picture"},
-       {"romanian", "Steam modul Big Picture"},
-       {"russian", "Режим Big Picture"},
-       {"finnish", "Steamin televisiotila"},
-       {"swedish", "Steams Big Picture-läge"},
-       {"turkish", "Steam Geniş Ekran Modu"},
-       {"vietnamese", "Chế độ Big Picture trên Steam"},
-       {"ukrainian", "Steam у режимі Big Picture"}};
+const std::map<std::string, std::string> BIG_PICTURE_WINDOW_TITLES = {
+    {"schinese", "Steam 大屏幕模式"},
+    {"tchinese", "Steam Big Picture 模式"},
+    {"japanese", "Steam Big Pictureモード"},
+    {"koreana", "Steam Big Picture 모드"},
+    {"thai", "โหมด Big Picture บน Steam"},
+    {"bulgarian", "Steam режим „Голям екран“"},
+    {"czech", "Steam režim Big Picture"},
+    {"danish", "Steam Big Picture-tilstand"},
+    {"german", "Big-Picture-Modus"},
+    {"english", "Steam Big Picture mode"},
+    {"spanish", "Modo Big Picture de Steam"},
+    {"latam", "Modo Big Picture de Steam"},
+    {"greek", "Steam Λειτουργία Big Picture"},
+    {"french", "Steam mode Big Picture"},
+    {"indonesian", "Mode Big Picture Steam"},
+    {"italian", "Modalità Big Picture di Steam"},
+    {"hungarian", "Steam Nagy Kép mód"},
+    {"dutch", "Steam Big Picture-modus"},
+    {"norwegian", "Steam Big Picture-modus"},
+    {"polish", "Tryb Big Picture Steam"},
+    {"portuguese", "Steam Big Picture"},
+    {"brazilian", "Steam Modo Big Picture"},
+    {"romanian", "Steam modul Big Picture"},
+    {"russian", "Режим Big Picture"},
+    {"finnish", "Steamin televisiotila"},
+    {"swedish", "Steams Big Picture-läge"},
+    {"turkish", "Steam Geniş Ekran Modu"},
+    {"vietnamese", "Chế độ Big Picture trên Steam"},
+    {"ukrainian", "Steam у режимі Big Picture"}
+};
 
-const QChar NON_BREAKING_SPACE = QChar(0x00A0);
-
-QString getRegistryValue(const std::wstring &keyPath, const std::wstring &valueName)
-{
+std::string getRegistryValue(const std::wstring& keyPath, const std::wstring& valueName) {
     HKEY hKey;
-    WCHAR value[256];
+    char value[256];
     DWORD valueLength = sizeof(value);
-    QString result;
+    std::string result;
 
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, keyPath.c_str(), 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
-        if (RegQueryValueEx(hKey, valueName.c_str(), NULL, NULL, (LPBYTE) value, &valueLength)
-            == ERROR_SUCCESS) {
-            result = QString::fromWCharArray(value).toLower();
+    // Using A-version of Reg functions
+    if (RegOpenKeyExA(HKEY_CURRENT_USER, std::string(keyPath.begin(), keyPath.end()).c_str(), 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+        if (RegQueryValueExA(hKey, std::string(valueName.begin(), valueName.end()).c_str(), NULL, NULL, (LPBYTE)value, &valueLength) == ERROR_SUCCESS) {
+            result = value;
         }
         RegCloseKey(hKey);
     }
@@ -58,36 +59,40 @@ QString getRegistryValue(const std::wstring &keyPath, const std::wstring &valueN
     return result;
 }
 
-QString getSteamLanguage()
-{
+std::string getSteamLanguage() {
     return getRegistryValue(L"Software\\Valve\\Steam\\steamglobal", L"Language");
 }
 
-QString cleanString(const QString &str)
-{
-    QString cleanedStr = str;
-    return cleanedStr.replace(NON_BREAKING_SPACE, ' ');
+std::string cleanString(const std::string& str) {
+    std::string cleanedStr = str;
+    cleanedStr.erase(std::remove(cleanedStr.begin(), cleanedStr.end(), '\xA0'), cleanedStr.end()); // Remove non-breaking space
+    return cleanedStr;
 }
 
-QString getBigPictureWindowTitle()
-{
-    QString language = getSteamLanguage().toLower();
+std::string getBigPictureWindowTitle() {
+    std::string language = getSteamLanguage();
+    std::transform(language.begin(), language.end(), language.begin(), ::tolower);
 
-    return BIG_PICTURE_WINDOW_TITLES.value(language, BIG_PICTURE_WINDOW_TITLES.value("english"));
+    auto it = BIG_PICTURE_WINDOW_TITLES.find(language);
+    if (it != BIG_PICTURE_WINDOW_TITLES.end()) {
+        return it->second;
+    }
+    return BIG_PICTURE_WINDOW_TITLES.at("english");
 }
 
-QVector<QString> getAllWindowTitles()
-{
-    QVector<QString> windowTitles;
+std::vector<std::string> getAllWindowTitles() {
+    std::vector<std::string> windowTitles;
 
     EnumWindows(
         [](HWND hwnd, LPARAM lParam) -> BOOL {
-            QVector<QString> *titles = reinterpret_cast<QVector<QString> *>(lParam);
+            std::vector<std::string>* titles = reinterpret_cast<std::vector<std::string>*>(lParam);
 
             if (IsWindowVisible(hwnd) && !(GetWindowLong(hwnd, GWL_STYLE) & WS_MINIMIZE)) {
                 WCHAR windowTitle[256];
-                if (GetWindowText(hwnd, windowTitle, sizeof(windowTitle) / sizeof(WCHAR)) > 0) {
-                    titles->append(QString::fromWCharArray(windowTitle));
+                if (GetWindowTextW(hwnd, windowTitle, sizeof(windowTitle) / sizeof(WCHAR)) > 0) {
+                    std::wstring ws(windowTitle);
+                    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+                    titles->push_back(converter.to_bytes(ws));
                 }
             }
             return TRUE;
@@ -97,46 +102,45 @@ QVector<QString> getAllWindowTitles()
     return windowTitles;
 }
 
-bool isBigPictureRunning()
-{
-    QString bigPictureTitle = cleanString(getBigPictureWindowTitle().toLower());
-    QStringList bigPictureWords = bigPictureTitle.split(' ', Qt::SkipEmptyParts);
+bool isBigPictureRunning() {
+    std::string bigPictureTitle = cleanString(getBigPictureWindowTitle());
+    std::istringstream iss(bigPictureTitle);
+    std::vector<std::string> bigPictureWords((std::istream_iterator<std::string>(iss)), std::istream_iterator<std::string>());
 
-    QVector<QString> currentWindowTitles = getAllWindowTitles();
-    for (const auto &windowTitle : currentWindowTitles) {
-        QString cleanedTitle = cleanString(windowTitle.toLower());
-        QStringList windowWords = cleanedTitle.split(' ', Qt::SkipEmptyParts);
+    auto currentWindowTitles = getAllWindowTitles();
+    for (const auto& windowTitle : currentWindowTitles) {
+        std::string cleanedTitle = cleanString(windowTitle);
+        std::istringstream issWindow(cleanedTitle);
+        std::vector<std::string> windowWords((std::istream_iterator<std::string>(issWindow)), std::istream_iterator<std::string>());
 
-        if (std::all_of(bigPictureWords.begin(),
-                        bigPictureWords.end(),
-                        [&windowWords](const QString &word) {
-                            return windowWords.contains(word);
-                        })) {
+        if (std::all_of(bigPictureWords.begin(), bigPictureWords.end(), [&windowWords](const std::string& word) {
+                return std::find(windowWords.begin(), windowWords.end(), word) != windowWords.end();
+            })) {
             return true;
         }
     }
     return false;
 }
 
-using namespace std;
-
-struct EnumWindowsData {
-    QStringList expectedWords;
-    bool windowFound;
-};
-
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
+    struct EnumWindowsData {
+        std::vector<std::string> expectedWords;
+        bool windowFound;
+    };
     EnumWindowsData* data = reinterpret_cast<EnumWindowsData*>(lParam);
 
     wchar_t windowTitle[256];
-    if (IsWindowVisible(hwnd) && GetWindowText(hwnd, windowTitle, sizeof(windowTitle) / sizeof(wchar_t)) > 0) {
-        QString title = QString::fromWCharArray(windowTitle).toLower().replace(NON_BREAKING_SPACE, ' ');
+    if (IsWindowVisible(hwnd) && GetWindowTextW(hwnd, windowTitle, sizeof(windowTitle) / sizeof(wchar_t)) > 0) {
+        std::wstring ws(windowTitle);
+        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+        std::string title = cleanString(converter.to_bytes(ws));
 
-        QStringList titleWords = title.split(' ', Qt::SkipEmptyParts);
+        std::istringstream iss(title);
+        std::vector<std::string> titleWords((std::istream_iterator<std::string>(iss)), std::istream_iterator<std::string>());
 
         bool match = true;
-        for (const QString& word : data->expectedWords) {
-            if (!titleWords.contains(word)) {
+        for (const auto& word : data->expectedWords) {
+            if (std::find(titleWords.begin(), titleWords.end(), word) == titleWords.end()) {
                 match = false;
                 break;
             }
@@ -144,7 +148,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
 
         if (match) {
             PostMessage(hwnd, WM_CLOSE, 0, 0);
-            wcout << L"Closed Big Picture window: " << title.toStdWString() << endl;
+            std::cout << "Closed Big Picture window: " << title << std::endl;
 
             data->windowFound = true;
             return FALSE;
@@ -154,15 +158,25 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
 }
 
 void closeBigPicture() {
-    QString bigPictureTitle = getBigPictureWindowTitle().toLower().replace(NON_BREAKING_SPACE, ' ');
-    QStringList expectedWords = bigPictureTitle.split(' ', Qt::SkipEmptyParts);
-    wcout << L"Looking for Big Picture window with title words: " << expectedWords.join(" ").toStdWString() << endl;
+    std::string bigPictureTitle = cleanString(getBigPictureWindowTitle());
+    std::istringstream iss(bigPictureTitle);
+    std::vector<std::string> expectedWords((std::istream_iterator<std::string>(iss)), std::istream_iterator<std::string>());
 
-    EnumWindowsData data = { expectedWords, false };
+    std::cout << "Looking for Big Picture window with title words: ";
+    for (const auto& word : expectedWords) {
+        std::cout << word << " ";
+    }
+    std::cout << std::endl;
+
+    struct EnumWindowsData {
+        std::vector<std::string> expectedWords;
+        bool windowFound;
+    };
+    EnumWindowsData data = {expectedWords, false};
 
     EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&data));
 
     if (!data.windowFound) {
-        wcout << L"No matching Big Picture window found." << endl;
+        std::cout << "No matching Big Picture window found." << std::endl;
     }
 }

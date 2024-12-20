@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - uses: res2k/setup-winsdk@support-sdk-26100 # TEMPORARY until upstream fbactions/setup-winsdk works w/ 26100
         with:
@@ -25,8 +27,12 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.7.2'
+          version: 6.8.0
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
           add-tools-to-path: true
+          cache: true
 
       - name: Install jom
         id: jom-setup
@@ -50,12 +56,14 @@ jobs:
             exit 1
           }
 
-      - name: Build with qmake and jom
+      - name: Set up Visual Studio and build with qmake and jom
         shell: pwsh
         run: |
+          # Build with qmake and jom
           mkdir build
           cd build
           qmake ..\Sunshine-Toolbox.pro CONFIG+=release
+
           # Use the JOM path variable
           $jomPath = "${{ steps.jom-setup.outputs.jom_path }}"
           & "$jomPath\jom.exe"
@@ -72,31 +80,6 @@ jobs:
               Get-ChildItem -Path $buildDir -Include *.cpp, *.h, *.obj, *.res -Recurse | Remove-Item -Force
           } else {
               Write-Host "Directory not found: $buildDir"
-          }
-
-      - name: Deploy Qt
-        shell: pwsh
-        run: |
-          # Navigate to the directory containing the executable
-          cd build
-
-          # Use the found path to windeployqt
-          $windeployqtPath = "D:\a\Sunshine-Toolbox\Qt\6.7.2\msvc2019_64\bin\windeployqt6.exe"
-
-          # Check if the executable exists
-          if (Test-Path $windeployqtPath) {
-              # Run windeployqt with the updated options
-              & $windeployqtPath `
-                  --exclude-plugins qmodernwindowsstyle,qsvgicon,qsvg,qico,qjpeg,qgif,qnetworklistmanager,qtuiotouchplugin `
-                  --no-opengl-sw `
-                  --no-system-dxc-compiler `
-                  --no-compiler-runtime `
-                  --no-translations `
-                  --no-system-d3d-compiler `
-                  D:\a\Sunshine-Toolbox\Sunshine-Toolbox\build\release\Sunshine-Toolbox.exe
-          } else {
-              Write-Error "windeployqt not found at the expected path!"
-              exit 1
           }
 
       - name: Rename release folder
