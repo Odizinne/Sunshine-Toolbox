@@ -57,7 +57,6 @@ bool changePrimaryDisplayResolution(int width, int height, int refreshRate) {
     }
 }
 
-// Function to handle stream-on functionality
 void streamOn() {
     wstring filePath = getStatusFilePath();
     if (filePath.empty()) return;
@@ -66,8 +65,9 @@ void streamOn() {
     wstring dirPath = filePath.substr(0, filePath.find_last_of(L"\\"));
 
     // Check if the directory exists; if not, create it
-    if (!QDir(QString::fromStdWString(dirPath)).exists()) {
-        if (!QDir().mkpath(QString::fromStdWString(dirPath))) {
+    DWORD fileAttributes = GetFileAttributesW(dirPath.c_str());
+    if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
+        if (!CreateDirectoryW(dirPath.c_str(), nullptr)) {
             wcerr << L"Failed to create directory: " << dirPath << endl;
             return;
         }
@@ -84,7 +84,6 @@ void streamOn() {
     }
 }
 
-
 // Function to handle stream-off functionality
 void streamOff() {
     wstring filePath = getStatusFilePath();
@@ -99,6 +98,39 @@ void streamOff() {
 
 void bigPictureDummyLoad() {
     using namespace std::chrono;
+
+    // Retrieve SteamPath from the registry
+    HKEY hKey;
+    char steamPath[MAX_PATH];
+    DWORD bufferSize = sizeof(steamPath);
+
+    if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\Valve\\Steam", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+        if (RegQueryValueExA(hKey, "SteamPath", nullptr, nullptr, reinterpret_cast<LPBYTE>(steamPath), &bufferSize) == ERROR_SUCCESS) {
+            RegCloseKey(hKey);
+
+            // Append the Steam executable and gamepadui flag
+            std::string command = std::string(steamPath) + "\\steam.exe steam://open/bigpicture";
+
+            // Launch Steam in detached mode
+            STARTUPINFOA si = { sizeof(STARTUPINFOA) };
+            PROCESS_INFORMATION pi;
+            if (CreateProcessA(nullptr, const_cast<char*>(command.c_str()), nullptr, nullptr, FALSE, DETACHED_PROCESS, nullptr, nullptr, &si, &pi)) {
+                CloseHandle(pi.hProcess);
+                CloseHandle(pi.hThread);
+                std::cout << "Steam launched in gamepadui mode." << std::endl;
+            } else {
+                std::cerr << "Failed to launch Steam in gamepadui mode." << std::endl;
+                return;
+            }
+        } else {
+            RegCloseKey(hKey);
+            std::cerr << "Failed to retrieve SteamPath from the registry." << std::endl;
+            return;
+        }
+    } else {
+        std::cerr << "Failed to open Steam registry key." << std::endl;
+        return;
+    }
 
     auto waitInterval = milliseconds(500);  // Time to wait between checks
     auto timeout = seconds(30);  // Maximum time to wait for the window to appear
@@ -137,7 +169,7 @@ void printHelp() {
     cout << "  --stream-on                 Set the streaming status to ON by creating a status file (%appdata%\\sunshine-status\\status.txt)." << endl;
     cout << "  --stream-off                Set the streaming status to OFF by deleting the status file (%appdata%\\sunshine-status\\status.txt)." << endl;
     cout << "  --close-bigpicture          Close Steam Big Picture window if it's open." << endl;
-    cout << "  --bigpicture-dummyload      Wait for Steam Big Picture window to appear and wait until it is closed, then exit the application." << endl;
+    cout << "  --bigpicture-dummyload      Start steam in BigPicture mode and wait until it is closed, then exit the application." << endl;
 }
 
 int main(int argc, char *argv[]) {
