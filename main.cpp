@@ -11,6 +11,7 @@
 #include "steamwindowmanager.h"
 #include <chrono>
 #include <thread>
+#include "HDR.h"
 
 using namespace std;
 
@@ -160,20 +161,31 @@ void bigPictureDummyLoad() {
     }
 }
 
+void toggleHDR(bool status) {
+    hdr::Status capability = hdr::GetWindowsHDRStatus();
+    if (capability != hdr::Status::Unsupported) {
+        hdr::SetWindowsHDRStatus(status);
+        cout << "HDR " << (status ? "successfully enabled." : "successfully disabled.") << endl;
+    } else {
+        cerr << "Your system does not support HDR." << endl;
+    }
+}
+
 void printHelp() {
     cout << "Usage: [sunshine-toolbox.exe] [OPTIONS]" << endl;
     cout << "Options:" << endl;
-    cout << "  -h, --help                  Show this help message and exit" << endl;
-    cout << "  --set-resolution width height refreshRate" << endl;
-    cout << "                              Set the primary display resolution to the specified width, height, and refresh rate." << endl;
-    cout << "  --stream-on                 Scripting purpose: create a status file (%appdata%\\sunshine-status\\status.txt)." << endl;
-    cout << "  --stream-off                Scripting purpose: delete the status file (%appdata%\\sunshine-status\\status.txt)." << endl;
-    cout << "  --close-bigpicture          Close Steam Big Picture window if it's open." << endl;
-    cout << "  --bigpicture-dummyload      Start steam in BigPicture mode and wait until it is closed, then exit the application." << endl;
+    cout << "  -h, --help                       Show this help message and exit" << endl;
+    cout << "  --set-resolution w h r           Set the primary display resolution to the specified width, height, and refresh rate." << endl;
+    cout << "  --stream-on || --stream-off      Scripting purpose: create or delete a status file (%appdata%\\sunshine-status\\status.txt)." << endl;
+    cout << "  --enable-hdr || --disable-hdr    Enable or disable HDR on supported systems." << endl;
+    cout << "  --close-bigpicture               Close Steam Big Picture window if it's open." << endl;
+    cout << "  --bigpicture-dummyload           Start steam in BigPicture mode and wait until it is closed, then exit the application." << endl;
 }
 
 int main(int argc, char *argv[]) {
     cout << "Sunshine-toolbox by github.com/odizinne" << endl;
+    cout << "" << endl;
+
     if (argc < 2) {
         printHelp();
         return 1;
@@ -216,6 +228,16 @@ int main(int argc, char *argv[]) {
         closeBigPicture();
     } else if (option == "--bigpicture-dummyload") {
         bigPictureDummyLoad();
+    } else if (option == "--enable-hdr") {
+        hdr::Status capability = hdr::GetWindowsHDRStatus();
+        if (capability != hdr::Status::Unsupported) {
+            hdr::SetWindowsHDRStatus(true);
+        }
+    } else if (option == "--disable-hdr") {
+        hdr::Status capability = hdr::GetWindowsHDRStatus();
+        if (capability != hdr::Status::Unsupported) {
+            hdr::SetWindowsHDRStatus(false);
+        }
     } else {
         cerr << "Invalid option. Use -h or --help for usage information." << endl;
         return 1;
