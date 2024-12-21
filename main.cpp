@@ -167,6 +167,10 @@ void toggleHDR(bool status) {
     }
 }
 
+void shutdownHost() {
+    system("shutdown /s /f /t 0");
+}
+
 void printHelp() {
     cout << "Usage: [sunshine-toolbox.exe] [OPTIONS]" << endl;
     cout << "Options:" << endl;
@@ -176,6 +180,7 @@ void printHelp() {
     cout << "  --enable-hdr || --disable-hdr    Enable or disable HDR on supported systems." << endl;
     cout << "  --close-bigpicture               Close Steam Big Picture window if it's open." << endl;
     cout << "  --bigpicture-dummyload           Start steam in BigPicture mode and wait until it is closed, then exit the application." << endl;
+    cout << "  --shutdown                       Shutdown host PC." << endl;
 }
 
 int main(int argc, char *argv[]) {
@@ -228,6 +233,8 @@ int main(int argc, char *argv[]) {
         toggleHDR(true);
     } else if (option == "--disable-hdr") {
         toggleHDR(false);
+    } else if (option == "--shutdown") {
+        shutdownHost();
     } else {
         cerr << "Invalid option. Use -h or --help for usage information." << endl;
         return 1;
