@@ -124,7 +124,7 @@ void streamOff() {
     }
 }
 
-void bigPictureDummyLoad(bool skipIntro) {
+void runBigPicture(bool skipIntro) {
     // Retrieve SteamPath from the registry
     HKEY hKey;
     char steamPath[MAX_PATH];
@@ -211,7 +211,7 @@ void printHelp() {
     cout << "  --stream-on || --stream-off      Scripting purpose: create or delete a status file (%appdata%\\sunshine-status\\status.txt)." << endl;
     cout << "  --enable-hdr || --disable-hdr    Enable or disable HDR on supported systems." << endl;
     cout << "  --close-bigpicture               Close Steam Big Picture window if it's open." << endl;
-    cout << "  --bigpicture-dummyload           Start steam in BigPicture mode and wait until it is closed, then exit the application." << endl;
+    cout << "  --run-bigpicture                 Start steam in BigPicture mode and wait until it is closed, then exit the application." << endl;
     cout << "  --shutdown                       Shutdown host PC." << endl;
 }
 
@@ -256,7 +256,7 @@ int main(int argc, char *argv[]) {
         streamOff();
     } else if (option == "--close-bigpicture") {
         closeBigPicture();
-    } else if (option == "--bigpicture-dummyload") {
+    } else if (option == "--run-bigpicture") {
         // Check if there is an extra argument for --skip-intro
         bool skipIntro = false;
         for (int i = 2; i < argc; ++i) {
@@ -265,7 +265,7 @@ int main(int argc, char *argv[]) {
                 break;
             }
         }
-        bigPictureDummyLoad(skipIntro);
+        runBigPicture(skipIntro);
     } else if (option == "--enable-hdr") {
         toggleHDR(true);
     } else if (option == "--disable-hdr") {

@@ -36,11 +36,13 @@ Enable / disable HDR if host support it.
 This will just close Steam Big Picture if the window exist.  
 This allows to close Big Picture when ending the stream.
 
-- `--bigpicture-dummyload`
+- `--run-bigpicture`
 
 This is meant to be used as main command for Steam Big Picture app.  
 This script will start steam in big picture mode and end when big picture window is closed.  
 This allows to close Big Picture to end the stream.
+
+You can also use additional `--skip-intro`.
 
 - `--shutdown`
 
