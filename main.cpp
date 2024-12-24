@@ -11,6 +11,37 @@
 #include "HDR.h"
 
 using namespace std;
+using namespace chrono;
+
+void skipBigPictureIntro() {
+    // Get the screen dimensions
+    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+    cout << (screenHeight) << endl;
+
+    // Calculate center position (scaled to 0-65535 range)
+    int centerX = screenWidth / 2;
+    int centerY = screenHeight / 2;
+
+    INPUT input[3] = {};
+
+    // Move mouse to center (scaled properly to 0-65535)
+    input[0].type = INPUT_MOUSE;
+    input[0].mi.dx = centerX * (65535 / screenWidth);
+    input[0].mi.dy = centerY * (65535 / screenHeight);
+    input[0].mi.mouseData = 0;
+    input[0].mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
+    input[0].mi.time = 0;
+    input[0].mi.dwExtraInfo = 0;
+
+    input[1].type = INPUT_MOUSE;
+    input[1].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+
+    input[2].type = INPUT_MOUSE;
+    input[2].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+
+    SendInput(3, input, sizeof(INPUT));
+}
 
 // Function to get the path to %APPDATA%/sunshine-status/status.txt
 wstring getStatusFilePath() {
@@ -93,9 +124,7 @@ void streamOff() {
     }
 }
 
-void bigPictureDummyLoad() {
-    using namespace std::chrono;
-
+void bigPictureDummyLoad(bool skipIntro) {
     // Retrieve SteamPath from the registry
     HKEY hKey;
     char steamPath[MAX_PATH];
@@ -106,7 +135,7 @@ void bigPictureDummyLoad() {
             RegCloseKey(hKey);
 
             // Append the Steam executable and gamepadui flag
-            std::string command = std::string(steamPath) + "\\steam.exe steam://open/bigpicture";
+            string command = string(steamPath) + "\\steam.exe steam://open/bigpicture";
 
             // Launch Steam in detached mode
             STARTUPINFOA si = { sizeof(STARTUPINFOA) };
@@ -114,46 +143,49 @@ void bigPictureDummyLoad() {
             if (CreateProcessA(nullptr, const_cast<char*>(command.c_str()), nullptr, nullptr, FALSE, DETACHED_PROCESS, nullptr, nullptr, &si, &pi)) {
                 CloseHandle(pi.hProcess);
                 CloseHandle(pi.hThread);
-                std::cout << "Steam launched in gamepadui mode." << std::endl;
+                cout << "Launching steam in gamepadui mode." << endl;
             } else {
-                std::cerr << "Failed to launch Steam in gamepadui mode." << std::endl;
+                cerr << "Failed to launch Steam in gamepadui mode." << endl;
                 return;
             }
         } else {
             RegCloseKey(hKey);
-            std::cerr << "Failed to retrieve SteamPath from the registry." << std::endl;
+            cerr << "Failed to retrieve SteamPath from the registry." << endl;
             return;
         }
     } else {
-        std::cerr << "Failed to open Steam registry key." << std::endl;
+        cerr << "Failed to open Steam registry key." << endl;
         return;
     }
 
-    std::chrono::milliseconds waitInterval(500);  // Time to wait between checks
-    std::chrono::seconds timeout(30);  // Maximum time to wait for the window to appear
+    chrono::milliseconds waitInterval(500);  // Time to wait between checks
+    chrono::seconds timeout(30);  // Maximum time to wait for the window to appear
 
-    std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+    chrono::steady_clock::time_point start = chrono::steady_clock::now();
     bool found = false;
 
     // Check for the Big Picture window within the timeout period
     while (duration_cast<milliseconds>(steady_clock::now() - start) < timeout) {
         if (isBigPictureRunning()) {
-            std::cout << "Big Picture window detected." << std::endl;
+            cout << "Big Picture window detected." << endl;
             found = true;
             break;
         }
-        std::this_thread::sleep_for(waitInterval);
+        this_thread::sleep_for(waitInterval);
     }
 
-    // If the Big Picture window was found, wait for it to close
+    if (skipIntro) {
+        skipBigPictureIntro();
+    }
+
     if (found) {
-        std::cout << "Waiting for Big Picture window to close." << std::endl;
+        cout << "Waiting for Big Picture window to close." << endl;
         while (isBigPictureRunning()) {
-            std::this_thread::sleep_for(waitInterval);
+            this_thread::sleep_for(waitInterval);
         }
-        std::cout << "Big Picture window closed." << std::endl;
+        cout << "Big Picture window closed." << endl;
     } else {
-        std::cout << "Big Picture window did not appear within the timeout period." << std::endl;
+        cout << "Big Picture window did not appear within the timeout period." << endl;
     }
 }
 
@@ -184,9 +216,6 @@ void printHelp() {
 }
 
 int main(int argc, char *argv[]) {
-    cout << "Sunshine-toolbox by github.com/odizinne" << endl;
-    cout << "" << endl;
-
     if (argc < 2) {
         printHelp();
         return 1;
@@ -206,9 +235,9 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        int width = std::atoi(argv[2]);
-        int height = std::atoi(argv[3]);
-        int refreshRate = std::atoi(argv[4]);
+        int width = atoi(argv[2]);
+        int height = atoi(argv[3]);
+        int refreshRate = atoi(argv[4]);
 
         // Validate the arguments
         if (width <= 0 || height <= 0 || refreshRate <= 0) {
@@ -228,7 +257,15 @@ int main(int argc, char *argv[]) {
     } else if (option == "--close-bigpicture") {
         closeBigPicture();
     } else if (option == "--bigpicture-dummyload") {
-        bigPictureDummyLoad();
+        // Check if there is an extra argument for --skip-intro
+        bool skipIntro = false;
+        for (int i = 2; i < argc; ++i) {
+            if (string(argv[i]) == "--skip-intro") {
+                skipIntro = true;
+                break;
+            }
+        }
+        bigPictureDummyLoad(skipIntro);
     } else if (option == "--enable-hdr") {
         toggleHDR(true);
     } else if (option == "--disable-hdr") {
