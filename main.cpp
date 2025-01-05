@@ -176,6 +176,7 @@ void runBigPicture(bool skipIntro) {
 
     if (skipIntro) {
         skipBigPictureIntro();
+        this_thread::sleep_for(waitInterval * 4); // sleep here to prevent crash if skipping intro
     }
 
     if (found) {
