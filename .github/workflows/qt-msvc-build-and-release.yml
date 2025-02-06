@@ -3,6 +3,9 @@ name: Build and Release
 on:
   workflow_dispatch:
 
+env:
+  QT_VERSION: 6.8.2
+
 jobs:
   build:
     runs-on: windows-latest
@@ -21,7 +24,7 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: 6.8.2
+          version: ${{ env.QT_VERSION }}
           host: windows
           target: desktop
           arch: win64_msvc2022_64
@@ -83,7 +86,7 @@ jobs:
           cd build
 
           # Use the found path to windeployqt
-          $windeployqtPath = "D:\a\Sunshine-Toolbox\Qt\6.8.2\msvc2022_64\bin\windeployqt6.exe"
+          $windeployqtPath = "D:\a\Sunshine-Toolbox\Qt\${{ env.QT_VERSION }}\msvc2022_64\bin\windeployqt6.exe"
 
           # Check if the executable exists
           if (Test-Path $windeployqtPath) {
