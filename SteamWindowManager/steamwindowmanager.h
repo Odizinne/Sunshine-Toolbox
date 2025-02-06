@@ -1,10 +1,10 @@
 #ifndef STEAMWINDOWMANAGER_H
 #define STEAMWINDOWMANAGER_H
 
-#include <QString>
+#include <string>
 
-QString getBigPictureWindowTitle();
-QString getSteamLanguage();
+std::string getBigPictureWindowTitle();
+std::string getSteamLanguage();
 bool isBigPictureRunning();
 void closeBigPicture();
 

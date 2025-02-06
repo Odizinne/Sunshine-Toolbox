@@ -5,9 +5,6 @@ on:
     branches:
       - main
 
-env:
-  QT_VERSION: 6.8.2
-
 jobs:
   build:
     runs-on: windows-latest
@@ -15,118 +12,22 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          submodules: true
 
       - name: Set up Visual Studio shell
         uses: egor-tensin/vs-shell@v2
         with:
           arch: x64
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{ env.QT_VERSION }}
-          host: windows
-          target: desktop
-          arch: win64_msvc2022_64
-          add-tools-to-path: true
-          cache: true
-
-      - name: Install jom
-        id: jom-setup
+      - name: Generate and Build with CMake
         shell: pwsh
         run: |
-          $url = "https://download.qt.io/official_releases/jom/jom_1_1_4.zip"
-          $outputPath = "jom_1_1_4.zip"
-          Invoke-WebRequest -Uri $url -OutFile $outputPath
-          $extractPath = "jom"
-          if (-not (Test-Path $extractPath)) {
-            New-Item -ItemType Directory -Path $extractPath | Out-Null
-          }
-          Expand-Archive -Path $outputPath -DestinationPath $extractPath
-          $jomDir = "$(pwd)\jom"
-          $jomExe = "$jomDir\jom.exe"
-          if (Test-Path $jomExe) {
-            Write-Output "JOM Path: $jomDir"
-            Write-Output "::set-output name=jom_path::$jomDir"
-          } else {
-            Write-Error "jom.exe not found in $jomDir"
-            exit 1
-          }
-
-      - name: Build
-        shell: pwsh
-        run: |
-          # Build with qmake and jom
           mkdir build
           cd build
-          qmake ..\Sunshine-Toolbox.pro CONFIG+=release
+          cmake ..
+          cmake --build . --config Release
 
-          # Use the JOM path variable
-          $jomPath = "${{ steps.jom-setup.outputs.jom_path }}"
-          & "$jomPath\jom.exe"
-
-      - name: Remove source and object files
-        shell: pwsh
-        run: |
-          # Define the directory
-          $buildDir = "build/release"
-
-          # Check if the directory exists
-          if (Test-Path $buildDir) {
-              # Remove .cpp, .h, .obj, and .res files
-              Get-ChildItem -Path $buildDir -Include *.cpp, *.h, *.obj, *.res -Recurse | Remove-Item -Force
-          } else {
-              Write-Host "Directory not found: $buildDir"
-          }
-
-      - name: Deploy Qt
-        shell: pwsh
-        run: |
-          # Navigate to the directory containing the executable
-          cd build
-
-          # Use the found path to windeployqt
-          $windeployqtPath = "D:\a\Sunshine-Toolbox\Qt\${{ env.QT_VERSION }}\msvc2022_64\bin\windeployqt6.exe"
-
-          # Check if the executable exists
-          if (Test-Path $windeployqtPath) {
-              # Run windeployqt with the updated options
-              & $windeployqtPath `
-                  --exclude-plugins qmodernwindowsstyle,qsvgicon,qsvg,qico,qjpeg,qgif,qnetworklistmanager,qtuiotouchplugin `
-                  --no-opengl-sw `
-                  --no-system-dxc-compiler `
-                  --no-compiler-runtime `
-                  --no-translations `
-                  --no-system-d3d-compiler `
-                  D:\a\Sunshine-Toolbox\Sunshine-Toolbox\build\release\Sunshine-Toolbox.exe
-          } else {
-              Write-Error "windeployqt not found at the expected path!"
-              exit 1
-          }
-
-      - name: Rename release folder
-        shell: pwsh
-        run: |
-          $releaseDir = "build/release"
-          $newDir = "Sunshine-Toolbox"
-          if (Test-Path $releaseDir) {
-              Rename-Item -Path $releaseDir -NewName $newDir
-          } else {
-              Write-Error "Release folder not found!"
-              exit 1
-          }
-          
-      - name: Zip binaries folder
-        run: |
-          $zipFile = "build/Sunshine-Toolbox_msvc_64.zip"
-          $folder = "build/Sunshine-Toolbox"
-          Compress-Archive -Path $folder -DestinationPath $zipFile
-        shell: pwsh
-          
-      - name: Upload Artifacts
+      - name: Upload EXE Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Sunshine-Toolbox_msvc_64
-          path: build/Sunshine-Toolbox_msvc_64.zip
+          path: build/Release/Sunshine-Toolbox.exe

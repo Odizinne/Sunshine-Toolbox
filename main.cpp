@@ -1,11 +1,8 @@
+#include "steamwindowmanager.h"
 #include <iostream>
 #include <windows.h>
-#include <cstdlib>
-#include <string>
 #include <fstream>
 #include <ShlObj.h>
-#include <winuser.h>
-#include "steamwindowmanager.h"
 #include <chrono>
 #include <thread>
 
