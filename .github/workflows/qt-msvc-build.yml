@@ -15,19 +15,15 @@ jobs:
         with:
           submodules: true
 
-      - uses: res2k/setup-winsdk@support-sdk-26100 # TEMPORARY until upstream fbactions/setup-winsdk works w/ 26100
+      - name: Set up Visual Studio shell
+        uses: egor-tensin/vs-shell@v2
         with:
-          winsdk-build-version: 26100
-        name: Install Windows 11 SDK 26100
-
-      - uses: ilammy/msvc-dev-cmd@v1
-        with:
-          sdk: 10.0.26100.0
+          arch: x64
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: 6.8.0
+          version: 6.8.2
           host: windows
           target: desktop
           arch: win64_msvc2022_64
@@ -56,7 +52,7 @@ jobs:
             exit 1
           }
 
-      - name: Set up Visual Studio and build with qmake and jom
+      - name: Build
         shell: pwsh
         run: |
           # Build with qmake and jom

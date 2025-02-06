@@ -8,7 +8,6 @@
 #include "steamwindowmanager.h"
 #include <chrono>
 #include <thread>
-#include "HDR.h"
 
 using namespace std;
 using namespace chrono;
@@ -51,37 +50,6 @@ wstring getStatusFilePath() {
     } else {
         wcerr << L"Failed to retrieve %APPDATA% path." << endl;
         return L"";
-    }
-}
-
-// Function to change the display resolution
-bool changePrimaryDisplayResolution(int width, int height, int refreshRate) {
-    DEVMODE devmode = { {0} };
-    devmode.dmSize = sizeof(DEVMODE);
-
-    // EnumDisplaySettings with ENUM_CURRENT_SETTINGS to get current settings
-    if (!EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &devmode)) {
-        cerr << "Failed to retrieve current display settings." << endl;
-        return false;
-    }
-
-    // Set the desired width, height, and refresh rate
-    devmode.dmPelsWidth = width;
-    devmode.dmPelsHeight = height;
-    devmode.dmDisplayFrequency = refreshRate;
-    devmode.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_DISPLAYFREQUENCY;
-
-    // Attempt to change the display settings
-    long result = ChangeDisplaySettings(&devmode, CDS_UPDATEREGISTRY);
-
-    if (result == DISP_CHANGE_SUCCESSFUL) {
-        cout << "Display resolution changed successfully to "
-             << width << " X " << height
-             << " at " << refreshRate << " Hz" << endl;
-        return true;
-    } else {
-        cerr << "Failed to change display resolution. Error code: " << result << endl;
-        return false;
     }
 }
 
@@ -190,16 +158,6 @@ void runBigPicture(bool skipIntro) {
     }
 }
 
-void toggleHDR(bool status) {
-    hdr::Status capability = hdr::GetWindowsHDRStatus();
-    if (capability != hdr::Status::Unsupported) {
-        hdr::SetWindowsHDRStatus(status);
-        cout << "HDR " << (status ? "successfully enabled." : "successfully disabled.") << endl;
-    } else {
-        cerr << "Your system does not support HDR." << endl;
-    }
-}
-
 void shutdownHost() {
     system("shutdown /s /f /t 0");
 }
@@ -208,9 +166,7 @@ void printHelp() {
     cout << "Usage: [sunshine-toolbox.exe] [OPTIONS]" << endl;
     cout << "Options:" << endl;
     cout << "  -h, --help                       Show this help message and exit" << endl;
-    cout << "  --set-resolution w h r           Set the primary display resolution to the specified width, height, and refresh rate." << endl;
     cout << "  --stream-on || --stream-off      Scripting purpose: create or delete a status file (%appdata%\\sunshine-status\\status.txt)." << endl;
-    cout << "  --enable-hdr || --disable-hdr    Enable or disable HDR on supported systems." << endl;
     cout << "  --close-bigpicture               Close Steam Big Picture window if it's open." << endl;
     cout << "  --run-bigpicture                 Start steam in BigPicture mode and wait until it is closed, then exit the application." << endl;
     cout << "  --shutdown                       Shutdown host PC." << endl;
@@ -229,29 +185,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    if (option == "--set-resolution") {
-        if (argc != 5) {
-            cerr << "Usage: " << argv[0]
-                 << " --set-resolution width height refreshRate" << endl;
-            return 1;
-        }
-
-        int width = atoi(argv[2]);
-        int height = atoi(argv[3]);
-        int refreshRate = atoi(argv[4]);
-
-        // Validate the arguments
-        if (width <= 0 || height <= 0 || refreshRate <= 0) {
-            cerr << "Width, height, and refreshRate must be positive integers." << endl;
-            return 1;
-        }
-
-        if (changePrimaryDisplayResolution(width, height, refreshRate)) {
-            cout << "Resolution change was successful." << endl;
-        } else {
-            cerr << "Resolution change failed." << endl;
-        }
-    } else if (option == "--stream-on") {
+    if (option == "--stream-on") {
         streamOn();
     } else if (option == "--stream-off") {
         streamOff();
@@ -267,10 +201,6 @@ int main(int argc, char *argv[]) {
             }
         }
         runBigPicture(skipIntro);
-    } else if (option == "--enable-hdr") {
-        toggleHDR(true);
-    } else if (option == "--disable-hdr") {
-        toggleHDR(false);
     } else if (option == "--shutdown") {
         shutdownHost();
     } else {
