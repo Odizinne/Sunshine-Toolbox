@@ -83,8 +83,8 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: Sunshine-Toolbox_msvc_64.exe
-          asset_name: Sunshine-Toolbox_msvc_64.exe
+          asset_path: Sunshine-Toolbox.exe
+          asset_name: Sunshine-Toolbox.exe
           asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
